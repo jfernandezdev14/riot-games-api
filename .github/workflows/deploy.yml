@@ -18,7 +18,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-2
+          aws-region: us-east-1
 
       - name: Log into the Amazon ECR Public
         id: login-ecr-public
@@ -51,4 +51,4 @@ jobs:
 
       - name: Update ECS service
         run: |
-          aws ecs update-service --cluster riotgames-cluster --service riotgames-service-1 --task-definition riot-games-api-task --force-new-deployment
+          aws ecs update-service --cluster riot-games-cluster-v1 --service riot-games-api-v1-service --task-definition riot-games-api-task --force-new-deployment
