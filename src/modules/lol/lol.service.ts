@@ -10,22 +10,21 @@ import { PageResponse } from '../../constants/PageResponse';
 import {
   DEFAULT_PAGE_NO,
   DEFAULT_PAGE_SIZE,
+  MAX_PAGE_SIZE,
 } from '../../constants/DefaultPageParams';
-import { QueueIDType, RegionAliasType, RegionContinent } from './lol.enum';
+import {
+  QueueIDType,
+  QueueNamesType,
+  RegionAliasType,
+  RegionContinent,
+} from './lol.enum';
 import { LeagueService } from '../../integrations/lol/league/league.service';
 import { Player } from '../../entities/Player.entity';
 import { PlayerService } from './player/player.service';
 import { MatchSummaryService } from './match-summary/match-summary.service';
 import { RankingService } from './ranking/ranking.service';
-import { TransformInstanceToInstance } from 'class-transformer';
-import { MatchSummary } from '../../entities/MatchSummary.entity';
-import { Column, JoinColumn, ManyToOne } from 'typeorm';
-import { IsDefined, IsOptional, Length } from 'class-validator';
-import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
+import { Ranking } from '../../entities/Ranking.entity';
+import { SummonerDto } from '../../integrations/lol/summoner/summoner.dto';
 
 @Injectable()
 export class LolService {
@@ -52,6 +51,138 @@ export class LolService {
         region,
       );
 
+      let matchSummaryDtoList = await this.processSummonerInfo(
+        summoner,
+        region,
+        page,
+        pageSize,
+        queueId,
+      );
+      return {
+        results: matchSummaryDtoList,
+        page: page,
+        pageSize: pageSize,
+      };
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
+  async getPlayerSummary(
+    summonerName: string,
+    region: RegionAliasType = RegionAliasType.NA1,
+    queueId: QueueIDType = QueueIDType.ALL,
+  ): Promise<PageResponse<MatchSummaryDto>> {
+    try {
+      const summoner = await this.summonerService.getSummonerByNameAndRegion(
+        summonerName,
+        region,
+      );
+      await this.processSummonerInfo(
+        summoner,
+        region,
+        DEFAULT_PAGE_NO,
+        MAX_PAGE_SIZE,
+        queueId,
+      );
+      let player: Player;
+      try {
+        player = await this.playerService.getPlayerByUniqueId(
+          summoner.id,
+          summoner.name,
+          summoner.puuid,
+        );
+        let statsByQueue = {};
+        let leagueEntries =
+          await this.leagueService.getLeagueEntriesBySummonerID(
+            player.summonerId,
+          );
+        for (const leagueEntry of leagueEntries) {
+          statsByQueue[QueueIDType[leagueEntry.queueType]] = {
+            rank: leagueEntry.rank,
+            tier: leagueEntry.tier,
+            leaguePoints: leagueEntry.leaguePoints,
+            wins: leagueEntry.wins,
+            losses: leagueEntry.losses,
+            queueType: leagueEntry.queueType,
+          };
+        }
+
+        let playerSummaryListData =
+          await this.matchSummaryService.getPlayerSummaryByPlayerId(player.id);
+
+        let playerSummary: Ranking[] = [];
+        for (const playerSummary of playerSummaryListData) {
+          let ranking: Ranking;
+          let kda = this.calculateKDA(
+            playerSummary.kills,
+            playerSummary.assists,
+            playerSummary.deaths,
+          );
+          try {
+            ranking = await this.rankingService.upsertRanking(
+              {
+                id: null,
+                summonerId: player.summonerId,
+                summonerName: player.name,
+                region: region,
+                tier: statsByQueue[playerSummary.queueId].tier,
+                rank: statsByQueue[playerSummary.queueId].rank,
+                leaguePoints: statsByQueue[playerSummary.queueId].leaguePoints,
+                kills: playerSummary.kills,
+                deaths: playerSummary.deaths,
+                assists: playerSummary.assists,
+                kda: kda,
+                avgVisionScore: playerSummary.avgVisionScore,
+                avgCSPerMinute: playerSummary.avgCSPerMinute,
+                summonerLevel: summoner.summonerLevel,
+                queueId: playerSummary.queueId,
+                queueType: statsByQueue[playerSummary.queueId].queueType,
+                playerId: player.id,
+              },
+              player.summonerId,
+              QueueNamesType.ARAM,
+              region,
+            );
+            if (
+              ranking.queueId == queueId ||
+              (queueId != null && queueId == QueueIDType.ALL)
+            ) {
+              playerSummary.push(ranking);
+            }
+          } catch (e) {}
+        }
+
+        let matchSummaryDtoList: MatchSummaryDto[] = [];
+        return {
+          results: matchSummaryDtoList,
+          page: DEFAULT_PAGE_NO,
+          pageSize: DEFAULT_PAGE_SIZE,
+        };
+      } catch (e) {
+        throw e;
+      }
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
+  private calculateKDA(kills: number, assists: number, deaths: number): number {
+    let deathIdx = deaths == 0 ? 1 : deaths;
+    let kda: number = Math.round((kills + assists) / deathIdx);
+    return kda;
+  }
+
+  private async processSummonerInfo(
+    summoner: SummonerDto,
+    region: RegionAliasType,
+    page: number = DEFAULT_PAGE_NO,
+    pageSize: number = DEFAULT_PAGE_SIZE,
+    queueId: QueueIDType = QueueIDType.ALL,
+  ): Promise<MatchSummaryDto[]> {
+    try {
       let player: Player;
       try {
         player = await this.playerService.getPlayerByUniqueId(
@@ -98,13 +229,15 @@ export class LolService {
           participantDto = new ParticipantDto();
         }
         let totalPlayedInMinutes = ~~(participantDto.timePlayed / 60);
-        let cSPerMinute =
+        let cSPerMinute = Math.round(
           (participantDto.trueDamageDealt -
             participantDto.trueDamageDealtToChampions) /
-          totalPlayedInMinutes;
-        let kda =
-          (participantDto.kills + participantDto.assists) /
-          participantDto.deaths;
+            totalPlayedInMinutes,
+        );
+        let deathIdx = participantDto.deaths == 0 ? 1 : participantDto.deaths;
+        let kda = Math.round(
+          (participantDto.kills + participantDto.assists) / deathIdx,
+        );
         let matchSummaryDto: MatchSummaryDto = {
           matchId: matchID,
           summonerName: participantDto.summonerName,
@@ -125,47 +258,16 @@ export class LolService {
         };
         matchSummaryDtoList.push(matchSummaryDto);
 
-        await this.matchSummaryService.createMatchSummary({
-          ...matchSummaryDto,
-          playerId: player.id,
-        });
+        await this.matchSummaryService.upsertRanking(
+          {
+            ...matchSummaryDto,
+            playerId: player.id,
+          },
+          matchID,
+          player.id,
+        );
       }
-      return {
-        results: matchSummaryDtoList,
-        page: page,
-        pageSize: pageSize,
-      };
-    } catch (e) {
-      this.logger.error(e);
-      throw e;
-    }
-  }
-
-  async getSummary(
-    summonerName: string,
-    region: RegionAliasType = RegionAliasType.NA1,
-    queueId: QueueIDType = QueueIDType.ALL,
-  ): Promise<PageResponse<MatchSummaryDto>> {
-    try {
-      const summoner = await this.summonerService.getSummonerByNameAndRegion(
-        summonerName,
-        region,
-      );
-
-      let matchesSummaryList = await this.getMatches(
-        summonerName,
-        region,
-        DEFAULT_PAGE_NO,
-        DEFAULT_PAGE_SIZE,
-        queueId,
-      );
-
-      let matchSummaryDtoList: MatchSummaryDto[] = [];
-      return {
-        results: matchSummaryDtoList,
-        page: DEFAULT_PAGE_NO,
-        pageSize: DEFAULT_PAGE_SIZE,
-      };
+      return matchSummaryDtoList;
     } catch (e) {
       this.logger.error(e);
       throw e;

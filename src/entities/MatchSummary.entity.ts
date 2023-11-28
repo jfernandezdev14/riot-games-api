@@ -99,13 +99,13 @@ export class MatchSummary extends Auditable {
   @ApiProperty({ description: 'Total Damage Dealt To Champions' })
   trueDamageDealtToChampions: number;
 
-  @Column({ name: 'cs_per_minute' })
+  @Column('decimal', { precision: 6, scale: 2, name: 'cs_per_minute' })
   @IsDefined()
   @IsNumber()
   @ApiProperty({ description: 'Creep Score Per Minute' })
   cSPerMinute: number;
 
-  @Column({ name: 'vision_score' })
+  @Column('decimal', { precision: 6, scale: 2, name: 'vision_score' })
   @IsDefined()
   @ApiProperty({ description: 'Vision Score' })
   visionScore: number;
@@ -125,7 +125,7 @@ export class MatchSummary extends Auditable {
   })
   queueId: number;
 
-  @Column({ name: 'game_end_timestamp' })
+  @Column({ type: 'bigint', name: 'game_end_timestamp' })
   @IsDefined()
   @ApiProperty({
     description:

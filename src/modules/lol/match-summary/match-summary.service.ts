@@ -12,6 +12,22 @@ export class MatchSummaryService {
     return this.matchSummaryDao.saveMatchSummary(matchSummary);
   }
 
+  async upsertRanking(
+    matchSummary: MatchSummary,
+    matchId: string,
+    playerId: string,
+  ): Promise<MatchSummary> {
+    const existingMatchSummary =
+      await this.matchSummaryDao.getMatchSummaryByUniqueId(matchId, playerId);
+    if (!existingMatchSummary) {
+      return this.matchSummaryDao.saveMatchSummary(matchSummary);
+    }
+    return this.matchSummaryDao.saveMatchSummary({
+      ...matchSummary,
+      id: existingMatchSummary.id,
+    });
+  }
+
   async updateRanking(
     matchSummary: MatchSummary,
     matchId: string,
@@ -29,6 +45,10 @@ export class MatchSummaryService {
 
   async getMatchSummaryById(matchSummaryId: string): Promise<MatchSummary> {
     return this.matchSummaryDao.getMatchSummaryById(matchSummaryId);
+  }
+
+  async getPlayerSummaryByPlayerId(matchSummaryId: string): Promise<any[]> {
+    return this.matchSummaryDao.getPlayerSummaryByPlayerId(matchSummaryId);
   }
 
   async deleteMatchSummary(

@@ -57,6 +57,12 @@ export class Ranking extends Auditable {
   })
   region: string;
 
+  @Column({ name: 'tier' })
+  @IsDefined()
+  @Length(2, 255)
+  @ApiProperty({ description: 'Summoner tier.', minLength: 2, maxLength: 255 })
+  tier: string;
+
   @Column({ name: 'rank' })
   @IsDefined()
   @Length(2, 255)

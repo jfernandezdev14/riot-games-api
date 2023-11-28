@@ -37,6 +37,23 @@ export class MatchSummaryDao {
       .getOne();
   }
 
+  async getPlayerSummaryByPlayerId(playerId: string): Promise<any[]> {
+    return this.repository
+      .createQueryBuilder('match_summary')
+      .select([
+        'match_summary.player_id as playerId',
+        'match_summary.queue_id as queueId',
+        'SUM( ALL match_summary.kills) as kills',
+        'SUM( ALL match_summary.assists) as assists',
+        'SUM( ALL match_summary.deaths) as deaths',
+        'AVG( ALL match_summary.cs_per_minute) as Avg_cs_per_minute',
+        'AVG( ALL match_summary.vision_score) as avgVisionScore',
+      ])
+      .where('match_summary.player_id = :playerId', { playerId })
+      .groupBy('match_summary.player_id, match_summary.queue_id')
+      .getMany();
+  }
+
   async find(
     page = DEFAULT_PAGE_NO,
     pageSize = DEFAULT_PAGE_SIZE,

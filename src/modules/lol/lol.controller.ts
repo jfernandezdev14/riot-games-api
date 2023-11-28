@@ -107,4 +107,40 @@ export class LolController {
     let queueId = QueueIDType[queueName];
     return await this.lolService.getMatches(summonerName, region, queueId);
   }
+
+  @Get('/region/:region/summoner/:summonerName/summary')
+  @ApiOperation({
+    summary: 'Get Summoner matches summary',
+  })
+  @ApiParam({
+    name: 'region',
+    required: true,
+    type: String,
+    enum: RegionAliasType,
+  })
+  @ApiQuery({
+    name: 'queueName',
+    required: false,
+    type: String,
+    enum: QueueNamesType,
+    enumName: 'Queue Name Filter',
+  })
+  async getPlayerSummary(
+    @Param('region', new ParseEnumPipe(RegionAliasType))
+    region: RegionAliasType,
+    @Param('summonerName') summonerName: string,
+    @Query(
+      'queueName',
+      new DefaultValuePipe(QueueNamesType.ALL),
+      new ParseEnumPipe(QueueNamesType),
+    )
+    queueName?: QueueNamesType,
+  ): Promise<PageResponse<MatchSummaryDto>> {
+    let queueId = QueueIDType[queueName];
+    return await this.lolService.getPlayerSummary(
+      summonerName,
+      region,
+      queueId,
+    );
+  }
 }
