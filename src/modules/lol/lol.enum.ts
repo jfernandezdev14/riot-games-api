@@ -7,6 +7,20 @@ export enum QueueIDType {
   ALL = 0,
 }
 
+export enum QueueNamesType {
+  RANKED_SOLO_5x5 = 'RANKED_SOLO_5x5',
+  RANKED_FLEX_SR = 'RANKED_FLEX_SR',
+  NORMAL_BLIND_PICK = 'NORMAL_BLIND_PICK',
+  NORMAL_DRAFT_PICK = 'NORMAL_DRAFT_PICK',
+  ARAM = 'ARAM',
+  ALL = 'ALL',
+}
+
 export enum RegionContinent {
-  DEFAULT = 'AMERICAS',
+  DEFAULT = 'americas',
+  na1 = 'americas',
+}
+
+export enum RegionAliasType {
+  NA1 = 'na1',
 }

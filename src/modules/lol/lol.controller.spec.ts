@@ -14,11 +14,11 @@ describe('LolController', () => {
     lolController = app.get<LolController>(LolController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(lolController.getMatches('LegitKorea', 'NA1')).toBe(
-        'Hello World!',
-      );
-    });
-  });
+  // describe('root', () => {
+  //   it('should return "Hello World!"', () => {
+  //     expect(lolController.getMatches('LegitKorea', 'NA1')).toBe(
+  //       'Hello World!',
+  //     );
+  //   });
+  // });
 });

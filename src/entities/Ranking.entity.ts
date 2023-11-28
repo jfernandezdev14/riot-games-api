@@ -1,10 +1,24 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
+} from 'typeorm';
 import { IsDefined, IsInt, IsOptional, IsUUID, Length } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  ApiHideProperty,
+} from '@nestjs/swagger';
 import { Auditable } from './Auditable.entity';
+import { Player } from './Player.entity';
+import { Expose } from 'class-transformer';
 
-@Entity('summoner')
-export class Summoner extends Auditable {
+@Entity('ranking')
+@Index(['summonerId', 'queueType', 'region'], { unique: true })
+export class Ranking extends Auditable {
   @PrimaryGeneratedColumn('uuid')
   @IsUUID()
   @IsOptional()
@@ -13,7 +27,17 @@ export class Summoner extends Auditable {
   })
   id?: string;
 
-  @Column()
+  @Column({ name: 'summoner_id' })
+  @IsDefined()
+  @Length(1, 255)
+  @ApiProperty({
+    description: 'ID of the Summoner',
+    minLength: 1,
+    maxLength: 56,
+  })
+  summonerId: string;
+
+  @Column({ name: 'summoner_name' })
   @IsDefined()
   @Length(1, 255)
   @ApiProperty({
@@ -21,7 +45,7 @@ export class Summoner extends Auditable {
     minLength: 1,
     maxLength: 56,
   })
-  name: string;
+  summonerName: string;
 
   @Column()
   @IsDefined()
@@ -33,21 +57,48 @@ export class Summoner extends Auditable {
   })
   region: string;
 
-  @Column({ name: 'created_at' })
+  @Column({ name: 'rank' })
   @IsDefined()
   @Length(2, 255)
-  @ApiProperty({ description: 'Summoner name.', minLength: 2, maxLength: 255 })
-  leaguePoints: string;
+  @ApiProperty({ description: 'Summoner rank.', minLength: 2, maxLength: 255 })
+  rank: string;
+
+  @Column({ name: 'league_points' })
+  @IsDefined()
+  @ApiProperty({ description: 'Summoner League Points.' })
+  leaguePoints: number;
 
   @Column()
-  @IsOptional()
-  @IsInt()
-  @ApiPropertyOptional({
-    description: 'ID of the summoner icon associated with the summoner.',
-  })
-  profileIconId?: number;
+  @IsDefined()
+  @ApiProperty({ description: 'Summoner kills.' })
+  kills: number;
 
   @Column()
+  @IsDefined()
+  @ApiProperty({ description: 'Summoner deaths.' })
+  deaths: number;
+
+  @Column()
+  @IsDefined()
+  @ApiProperty({ description: 'Summoner assists.' })
+  assists: number;
+
+  @Column()
+  @IsDefined()
+  @ApiProperty({ description: 'Kills/Deaths/Assists ratio' })
+  kda: number;
+
+  @Column({ name: 'avg_vision_score' })
+  @IsDefined()
+  @ApiProperty({ description: 'Summoner average Vision Score.' })
+  avgVisionScore: number;
+
+  @Column({ name: 'avg_cs_per_minute' })
+  @IsDefined()
+  @ApiProperty({ description: 'Summoner average Creep Score Per Minute.' })
+  avgCSPerMinute: number;
+
+  @Column({ name: 'summoner_level' })
   @IsOptional()
   @IsInt()
   @ApiPropertyOptional({
@@ -55,12 +106,30 @@ export class Summoner extends Auditable {
   })
   summonerLevel?: number;
 
-  @Column()
+  @Column({ name: 'queue_id' })
   @IsOptional()
   @IsInt()
   @ApiPropertyOptional({
-    description:
-      'Date summoner was last modified specified as epoch milliseconds. The following events will update this timestamp: summoner name change, summoner level change, or profile icon change.',
+    description: 'Queue Identifier',
   })
-  revisionDate?: number;
+  queueId?: number;
+
+  @Column({ name: 'queue_type' })
+  @IsDefined()
+  @ApiPropertyOptional({
+    description: 'Queue Type Name',
+  })
+  queueType?: string;
+
+  @Column({ name: 'player_id' })
+  @IsOptional()
+  @ApiPropertyOptional({
+    description: 'Player ID',
+  })
+  playerId?: string;
+
+  @ManyToOne(() => Player)
+  @JoinColumn({ name: 'player_id' })
+  @ApiHideProperty()
+  player?: Player;
 }

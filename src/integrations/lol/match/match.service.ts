@@ -5,20 +5,18 @@ import { firstValueFrom } from 'rxjs';
 import { plainToInstance } from 'class-transformer';
 import { MatchDto } from './match.dto';
 import {
-  DEFAULT_PAGE_NO,
-  DEFAULT_PAGE_SIZE,
-} from '../../../constants/DefaultPageParams';
-import { QueueIDType } from '../../../modules/lol/lol.enum';
+  MATCHES_BY_ID,
+  MATCHES_BY_PUUID,
+} from '../../../constants/IntegrationURLS';
 
 @Injectable()
 export class MatchService {
   private readonly RIOT_GAMES_API_HOST: string;
   private readonly URL_PROTOCOL: string;
-
+  private readonly riotAPIKey: string;
   constructor(
     private httpService: HttpService,
     private readonly configService: ConfigService,
-    private riotAPIKey: string,
   ) {
     this.RIOT_GAMES_API_HOST = configService.get('RIOT_GAMES_API_HOST');
     this.URL_PROTOCOL = configService.get('URL_PROTOCOL');
@@ -26,7 +24,7 @@ export class MatchService {
   }
 
   async getMatchByID(matchId: string, region: string): Promise<MatchDto> {
-    const url = `${this.URL_PROTOCOL}${region}.${this.RIOT_GAMES_API_HOST}${SUMMONER_BY_NAME}/${name}`;
+    const url = `${this.URL_PROTOCOL}${region}.${this.RIOT_GAMES_API_HOST}${MATCHES_BY_ID}/${matchId}`;
     const headers = {
       'X-Riot-Token': this.riotAPIKey,
     };
@@ -46,13 +44,22 @@ export class MatchService {
     queueId: number,
     endTime: number,
   ): Promise<string[]> {
-    const url = `${this.URL_PROTOCOL}${region}.${this.RIOT_GAMES_API_HOST}${SUMMONER_BY_NAME}/${name}`;
-    const headers = {
-      'X-Riot-Token': this.riotAPIKey,
-    };
-    const response = await firstValueFrom(
-      this.httpService.get(url, { headers: headers }),
-    );
-    return response.data;
+    try {
+      const baseUrl = `${this.URL_PROTOCOL}${region}.${this.RIOT_GAMES_API_HOST}${MATCHES_BY_PUUID}/${puuid}/ids`;
+      let queryStr = `start=${start}&count=${count}&endTime=${endTime}`;
+      if (queueId != null && queueId != 0) {
+        queryStr = `${queryStr}&queue=${queueId}`;
+      }
+      const headers = {
+        'X-Riot-Token': this.riotAPIKey,
+      };
+      const url = `${baseUrl}?${queryStr}`;
+      const response = await firstValueFrom(
+        this.httpService.get(url, { headers: headers }),
+      );
+      return response.data;
+    } catch (e) {
+      throw e;
+    }
   }
 }
