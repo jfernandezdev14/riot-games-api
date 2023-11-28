@@ -8,16 +8,8 @@ import { MatchSummary } from '../../../entities/MatchSummary.entity';
 export class MatchSummaryService {
   constructor(private readonly matchSummaryDao: MatchSummaryDao) {}
 
-  async createMatchSummary(
-    matchSummary: MatchSummary,
-    matchId: string,
-    playerId: string,
-  ): Promise<MatchSummary> {
-    return this.matchSummaryDao.saveMatchSummary({
-      ...matchSummary,
-      matchId,
-      playerId,
-    });
+  async createMatchSummary(matchSummary: MatchSummary): Promise<MatchSummary> {
+    return this.matchSummaryDao.saveMatchSummary(matchSummary);
   }
 
   async updateRanking(

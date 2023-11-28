@@ -5,6 +5,8 @@ services:
     image: postgres:15.1
     networks:
       - riot-games-network
+    ports:
+      - "5432:5432"
     volumes:
       - ./data/postgres:/data/postgres
     env_file:
@@ -31,10 +33,12 @@ services:
     volumes:
       - ./src:/user/src/app/src
     env_file:
-      - .env
+      - .docker.node.env
     ports:
       - "3000:3000"
       - "9229:9229"
+    links:
+      - riot-games-db
     depends_on:
       - riot-games-db
     networks:

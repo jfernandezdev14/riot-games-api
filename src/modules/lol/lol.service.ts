@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   MatchSummaryDto,
   ParticipantDto,
@@ -13,8 +13,19 @@ import {
 } from '../../constants/DefaultPageParams';
 import { QueueIDType, RegionAliasType, RegionContinent } from './lol.enum';
 import { LeagueService } from '../../integrations/lol/league/league.service';
-import { LeagueEntryDto } from '../../integrations/lol/league/league.dto';
-import { matches } from 'class-validator';
+import { Player } from '../../entities/Player.entity';
+import { PlayerService } from './player/player.service';
+import { MatchSummaryService } from './match-summary/match-summary.service';
+import { RankingService } from './ranking/ranking.service';
+import { TransformInstanceToInstance } from 'class-transformer';
+import { MatchSummary } from '../../entities/MatchSummary.entity';
+import { Column, JoinColumn, ManyToOne } from 'typeorm';
+import { IsDefined, IsOptional, Length } from 'class-validator';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 
 @Injectable()
 export class LolService {
@@ -23,6 +34,9 @@ export class LolService {
     private summonerService: SummonerService,
     private matchService: MatchService,
     private leagueService: LeagueService,
+    private playerService: PlayerService,
+    private matchSummaryService: MatchSummaryService,
+    private rankingService: RankingService,
     private readonly configService: ConfigService,
   ) {}
   async getMatches(
@@ -37,6 +51,26 @@ export class LolService {
         summonerName,
         region,
       );
+
+      let player: Player;
+      try {
+        player = await this.playerService.getPlayerByUniqueId(
+          summoner.id,
+          summoner.name,
+          summoner.puuid,
+        );
+      } catch (e) {
+        if (e instanceof NotFoundException) {
+          let newPlayer: Player = {
+            summonerId: summoner.id,
+            puuid: summoner.puuid,
+            name: summoner.name,
+            region: region,
+          };
+          player = await this.playerService.createPlayer(newPlayer);
+        }
+      }
+
       const startIndex = page * pageSize - pageSize;
       const currentTimeEpoch = Date.now();
       const regionContinent = RegionContinent[region];
@@ -84,11 +118,17 @@ export class LolService {
           trueDamageDealt: participantDto.trueDamageDealt,
           trueDamageDealtToChampions: participantDto.trueDamageDealtToChampions,
           cSPerMinute: cSPerMinute,
+          visionScore: participantDto.visionScore,
           win: participantDto.win,
           queueId: match.info.queueId,
           gameEndTimestamp: match.info.gameEndTimestamp,
         };
         matchSummaryDtoList.push(matchSummaryDto);
+
+        await this.matchSummaryService.createMatchSummary({
+          ...matchSummaryDto,
+          playerId: player.id,
+        });
       }
       return {
         results: matchSummaryDtoList,
@@ -119,6 +159,7 @@ export class LolService {
         DEFAULT_PAGE_SIZE,
         queueId,
       );
+
       let matchSummaryDtoList: MatchSummaryDto[] = [];
       return {
         results: matchSummaryDtoList,

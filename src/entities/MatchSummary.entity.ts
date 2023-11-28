@@ -6,14 +6,19 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { IsDefined, IsInt, IsOptional, IsUUID, Length } from 'class-validator';
+import {
+  IsDefined,
+  IsNumber,
+  IsOptional,
+  IsUUID,
+  Length,
+} from 'class-validator';
 import {
   ApiHideProperty,
   ApiProperty,
   ApiPropertyOptional,
 } from '@nestjs/swagger';
 import { Auditable } from './Auditable.entity';
-import { Expose } from 'class-transformer';
 import { QueueIDType } from '../modules/lol/lol.enum';
 import { Player } from './Player.entity';
 
@@ -70,6 +75,7 @@ export class MatchSummary extends Auditable {
 
   @Column()
   @IsDefined()
+  @IsNumber()
   @ApiProperty({ description: 'Kills/Deaths/Assists ratio' })
   kda: number;
 
@@ -95,6 +101,7 @@ export class MatchSummary extends Auditable {
 
   @Column({ name: 'cs_per_minute' })
   @IsDefined()
+  @IsNumber()
   @ApiProperty({ description: 'Creep Score Per Minute' })
   cSPerMinute: number;
 

@@ -54,6 +54,10 @@ export class MatchSummaryDto {
   cSPerMinute: number;
 
   @Expose()
+  @ApiProperty({ description: 'Vision Score' })
+  visionScore: number;
+
+  @Expose()
   @ApiProperty({ description: 'Win' })
   win: boolean;
 
@@ -118,6 +122,10 @@ export class ParticipantDto {
   @Expose()
   @ApiProperty({ description: 'True Damage Dealt To Champions' })
   trueDamageDealtToChampions: number;
+
+  @Expose()
+  @ApiProperty({ description: 'Vision Score' })
+  visionScore: number;
 
   @Expose()
   @ApiProperty({ description: 'Win' })

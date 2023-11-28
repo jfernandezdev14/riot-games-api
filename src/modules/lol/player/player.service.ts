@@ -8,18 +8,8 @@ import { Player } from '../../../entities/Player.entity';
 export class PlayerService {
   constructor(private readonly playerDao: PlayerDao) {}
 
-  async createPlayer(
-    player: Player,
-    summonerId: string,
-    name: string,
-    puuid: string,
-  ): Promise<Player> {
-    return this.playerDao.savePlayer({
-      ...player,
-      summonerId,
-      name,
-      puuid,
-    });
+  async createPlayer(player: Player): Promise<Player> {
+    return this.playerDao.savePlayer(player);
   }
 
   async updatePlayer(
@@ -43,6 +33,24 @@ export class PlayerService {
 
   async getPlayerById(playerId: string): Promise<Player> {
     return this.playerDao.getPlayerById(playerId);
+  }
+
+  async getPlayerByUniqueId(
+    summonerId: string,
+    name: string,
+    puuid: string,
+  ): Promise<Player> {
+    const player = await this.playerDao.getPlayerByUniqueId(
+      summonerId,
+      name,
+      puuid,
+    );
+    if (!player) {
+      throw new NotFoundException(
+        `player with summonerId: ${summonerId}, name: ${name} and puuid: ${puuid} not found.`,
+      );
+    }
+    return player;
   }
 
   async deletePlayer(
