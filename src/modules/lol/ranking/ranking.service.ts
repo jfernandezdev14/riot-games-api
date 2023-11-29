@@ -65,6 +65,24 @@ export class RankingService {
     return this.rankingDao.getRankingById(rakingId);
   }
 
+  async getRankingPosition(
+    summonerId: string,
+    attribute: string,
+  ): Promise<any> {
+    let rankingPositions = await this.rankingDao.getRankingPosition(
+      summonerId,
+      attribute,
+    );
+    let rakingPosition = {};
+    for (let rankingPos of rankingPositions) {
+      if (rankingPos.summoner_id == summonerId) {
+        rakingPosition = rankingPos;
+        break;
+      }
+    }
+    return rakingPosition;
+  }
+
   async deleteRanking(
     id: string,
     summonerId: string,

@@ -26,12 +26,23 @@ export class PlayerDao {
       .getOne();
   }
 
+  async getPlayerByNameAndRegion(
+    name: string,
+    region: string,
+  ): Promise<Player> {
+    return await this.repository
+      .createQueryBuilder('player')
+      .where('name = :name', { name })
+      .where('region = :region', { region })
+      .getOne();
+  }
+
   async getPlayerByUniqueId(
     summonerId: string,
     name: string,
     puuid: string,
   ): Promise<Player> {
-    return this.repository
+    return await this.repository
       .createQueryBuilder('player')
       .where('player.summoner_id = :summonerId', { summonerId })
       .andWhere('player.name = :name', { name })

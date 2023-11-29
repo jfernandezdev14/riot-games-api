@@ -88,10 +88,15 @@ export class Ranking extends Auditable {
   @ApiProperty({ description: 'Summoner assists.' })
   assists: number;
 
-  @Column()
+  @Column({ type: 'decimal', nullable: true })
   @IsDefined()
-  @ApiProperty({ type: 'decimal', description: 'Kills/Deaths/Assists ratio' })
+  @ApiProperty({ description: 'Kills/Deaths/Assists ratio' })
   kda: number;
+
+  @Column({ type: 'decimal', name: 'win_rate', nullable: true })
+  @IsOptional()
+  @ApiProperty({ description: 'Win Rate' })
+  winRate: number;
 
   @Column({ type: 'decimal', name: 'avg_vision_score' })
   @IsDefined()

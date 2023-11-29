@@ -85,6 +85,11 @@ export class LolController {
     type: String,
     enum: RegionAliasType,
   })
+  @ApiParam({
+    name: 'summonerName',
+    required: true,
+    type: String,
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
   @ApiQuery({
@@ -119,6 +124,11 @@ export class LolController {
     type: String,
     enum: RegionAliasType,
   })
+  @ApiParam({
+    name: 'summonerName',
+    required: true,
+    type: String,
+  })
   @ApiQuery({
     name: 'queueName',
     required: false,
@@ -143,5 +153,28 @@ export class LolController {
       region,
       queueId,
     );
+  }
+
+  @Get('/leaderboard/:summonerName/:region')
+  @ApiOperation({
+    summary: 'Get leaderboard ranking positions',
+  })
+  @ApiParam({
+    name: 'summonerName',
+    required: true,
+    type: String,
+  })
+  @ApiParam({
+    name: 'region',
+    required: true,
+    type: String,
+    enum: RegionAliasType,
+  })
+  async getLeaderBoardRanking(
+    @Param('region', new ParseEnumPipe(RegionAliasType))
+    region: RegionAliasType,
+    @Param('summonerName') summonerName: string,
+  ): Promise<any> {
+    return await this.lolService.getLeaderBoardRanking(summonerName, region);
   }
 }
