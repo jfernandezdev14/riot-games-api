@@ -41,12 +41,10 @@ export class LolService {
     queueId: QueueIDType = QueueIDType.ALL,
   ): Promise<PageResponse<MatchSummaryDto>> {
     try {
-      this.logger.log('before calling summoner');
       const summoner = await this.summonerService.getSummonerByNameAndRegion(
         summonerName,
         region,
       );
-      this.logger.log('after calling summoner');
 
       let matchSummaryDtoList = await this.processSummonerInfo(
         summoner,
@@ -55,7 +53,7 @@ export class LolService {
         pageSize,
         queueId,
       );
-      this.logger.log('before finish');
+
       return {
         results: matchSummaryDtoList,
         page: page,
@@ -202,17 +200,13 @@ export class LolService {
     try {
       let player: Player;
       try {
-        this.logger.log('before calling db for player');
         player = await this.playerService.getPlayerByUniqueId(
           summoner.id,
           summoner.name,
           summoner.puuid,
         );
-        this.logger.log('after calling db for player');
       } catch (e) {
-        this.logger.log('after with error calling db for player: ', e);
         if (e instanceof NotFoundException) {
-          this.logger.log('before calling db creating player');
           let newPlayer: Player = {
             summonerId: summoner.id,
             puuid: summoner.puuid,
@@ -220,14 +214,12 @@ export class LolService {
             region: region,
           };
           player = await this.playerService.createPlayer(newPlayer);
-          this.logger.log('after calling db creating player');
         }
       }
 
       const startIndex = page * pageSize - pageSize;
       const currentTimeEpoch = Date.now();
       const regionContinent = RegionContinent[region];
-      this.logger.log('before calling for matches');
       const matches = await this.matchService.findMatches(
         summoner.puuid,
         regionContinent,
@@ -236,15 +228,12 @@ export class LolService {
         queueId,
         currentTimeEpoch,
       );
-      this.logger.log('after calling for matches');
       let matchSummaryDtoList: MatchSummaryDto[] = [];
       for (const matchID of matches) {
-        this.logger.log('before calling for match');
         let match = await this.matchService.getMatchByID(
           matchID,
           RegionContinent.DEFAULT,
         );
-        this.logger.log('after calling for match');
         let participantDto: ParticipantDto;
         match.info.participants.forEach((participant: ParticipantDto) => {
           if (participant.puuid == summoner.puuid) {
@@ -284,7 +273,6 @@ export class LolService {
           gameEndTimestamp: match.info.gameEndTimestamp,
         };
         matchSummaryDtoList.push(matchSummaryDto);
-        this.logger.log('before calling adding ranking match');
         await this.matchSummaryService.upsertRanking(
           {
             ...matchSummaryDto,
@@ -293,7 +281,6 @@ export class LolService {
           matchID,
           player.id,
         );
-        this.logger.log('after calling adding ranking match');
       }
       return matchSummaryDtoList;
     } catch (e) {

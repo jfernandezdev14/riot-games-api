@@ -51,4 +51,4 @@ jobs:
 
       - name: Update ECS service
         run: |
-          aws ecs update-service --cluster riot-games-cluster-3 --service riot-games-service --task-definition riot-games-api-task --force-new-deployment
+          aws ecs update-service --cluster riot-games-cluster-4 --service riot-games-service-1 --task-definition riot-games-api-task --force-new-deployment
