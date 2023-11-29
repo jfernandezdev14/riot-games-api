@@ -118,6 +118,7 @@ export class LolService {
             deaths: +playerSummaryData.deaths,
             assists: +playerSummaryData.assists,
             kda: kda,
+            winRate: +(leagueEntry.wins / leagueEntry.losses).toFixed(2),
             avgVisionScore: +playerSummaryData.avgVisionScore,
             avgCSPerMinute: +playerSummaryData.avgCSPerMinute,
             summonerLevel: summoner.summonerLevel,
@@ -143,9 +144,49 @@ export class LolService {
     }
   }
 
+  async getLeaderBoardRanking(
+    summonerName: string,
+    region: RegionAliasType = RegionAliasType.NA1,
+  ): Promise<any> {
+    try {
+      const summoner = await this.summonerService.getSummonerByNameAndRegion(
+        summonerName,
+        region,
+      );
+
+      const player: Player = await this.playerService.getPlayerByUniqueId(
+        summoner.id,
+        summoner.name,
+        summoner.puuid,
+      );
+      let positionRankingLGPoints =
+        await this.rankingService.getRankingPosition(
+          player.summonerId,
+          'league_points',
+        );
+      let positionRankingWinRate = await this.rankingService.getRankingPosition(
+        player.summonerId,
+        'win_rate',
+      );
+      return {
+        leaguePoints: {
+          top: positionRankingLGPoints.position,
+          value: positionRankingLGPoints.league_points,
+        },
+        winRate: {
+          top: positionRankingWinRate.position,
+          value: positionRankingWinRate.win_rate,
+        },
+      };
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
   private calculateKDA(kills: number, assists: number, deaths: number): number {
     let deathIdx = deaths == 0 ? 1 : deaths;
-    return Math.round((kills + assists) / deathIdx);
+    return +((kills + assists) / deathIdx).toFixed(2);
   }
 
   private async processSummonerInfo(
@@ -202,15 +243,16 @@ export class LolService {
           participantDto = new ParticipantDto();
         }
         let totalPlayedInMinutes = ~~(participantDto.timePlayed / 60);
-        let cSPerMinute = Math.round(
+        let cSPerMinute = (
           (participantDto.trueDamageDealt -
             participantDto.trueDamageDealtToChampions) /
-            totalPlayedInMinutes,
-        );
+          totalPlayedInMinutes
+        ).toFixed(2);
         let deathIdx = participantDto.deaths == 0 ? 1 : participantDto.deaths;
-        let kda = Math.round(
-          (participantDto.kills + participantDto.assists) / deathIdx,
-        );
+        let kda = (
+          (participantDto.kills + participantDto.assists) /
+          deathIdx
+        ).toFixed(2);
         let matchSummaryDto: MatchSummaryDto = {
           matchId: matchID,
           summonerName: participantDto.summonerName,
@@ -218,12 +260,12 @@ export class LolService {
           kills: participantDto.kills,
           deaths: participantDto.deaths,
           assists: participantDto.assists,
-          kda: kda,
+          kda: +kda,
           lane: participantDto.lane,
           timePlayed: participantDto.timePlayed,
           trueDamageDealt: participantDto.trueDamageDealt,
           trueDamageDealtToChampions: participantDto.trueDamageDealtToChampions,
-          cSPerMinute: cSPerMinute,
+          cSPerMinute: +cSPerMinute,
           visionScore: participantDto.visionScore,
           win: participantDto.win,
           queueId: match.info.queueId,
