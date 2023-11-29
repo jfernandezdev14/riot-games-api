@@ -35,6 +35,13 @@ export class PlayerService {
     return this.playerDao.getPlayerById(playerId);
   }
 
+  async getPlayerByNameAndRegion(
+    name: string,
+    region: string,
+  ): Promise<Player> {
+    return await this.playerDao.getPlayerByNameAndRegion(name, region);
+  }
+
   async getPlayerByUniqueId(
     summonerId: string,
     name: string,

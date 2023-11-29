@@ -73,7 +73,7 @@ export class MatchSummary extends Auditable {
   @ApiProperty({ description: 'Assists' })
   assists: number;
 
-  @Column()
+  @Column({ type: 'decimal', nullable: true })
   @IsDefined()
   @IsNumber()
   @ApiProperty({ description: 'Kills/Deaths/Assists ratio' })

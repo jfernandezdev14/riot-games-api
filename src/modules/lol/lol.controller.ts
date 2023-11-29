@@ -16,6 +16,7 @@ import {
   DEFAULT_PAGE_NO,
   DEFAULT_PAGE_SIZE,
 } from '../../constants/DefaultPageParams';
+import { Ranking } from '../../entities/Ranking.entity';
 
 @Controller('/lol')
 @ApiTags('LeagueOfLegends')
@@ -84,6 +85,11 @@ export class LolController {
     type: String,
     enum: RegionAliasType,
   })
+  @ApiParam({
+    name: 'summonerName',
+    required: true,
+    type: String,
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
   @ApiQuery({
@@ -118,6 +124,11 @@ export class LolController {
     type: String,
     enum: RegionAliasType,
   })
+  @ApiParam({
+    name: 'summonerName',
+    required: true,
+    type: String,
+  })
   @ApiQuery({
     name: 'queueName',
     required: false,
@@ -135,12 +146,35 @@ export class LolController {
       new ParseEnumPipe(QueueNamesType),
     )
     queueName?: QueueNamesType,
-  ): Promise<PageResponse<MatchSummaryDto>> {
+  ): Promise<Ranking[]> {
     let queueId = QueueIDType[queueName];
     return await this.lolService.getPlayerSummary(
       summonerName,
       region,
       queueId,
     );
+  }
+
+  @Get('/leaderboard/:summonerName/:region')
+  @ApiOperation({
+    summary: 'Get leaderboard ranking positions',
+  })
+  @ApiParam({
+    name: 'summonerName',
+    required: true,
+    type: String,
+  })
+  @ApiParam({
+    name: 'region',
+    required: true,
+    type: String,
+    enum: RegionAliasType,
+  })
+  async getLeaderBoardRanking(
+    @Param('region', new ParseEnumPipe(RegionAliasType))
+    region: RegionAliasType,
+    @Param('summonerName') summonerName: string,
+  ): Promise<any> {
+    return await this.lolService.getLeaderBoardRanking(summonerName, region);
   }
 }

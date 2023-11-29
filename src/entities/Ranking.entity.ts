@@ -14,7 +14,6 @@ import {
 } from '@nestjs/swagger';
 import { Auditable } from './Auditable.entity';
 import { Player } from './Player.entity';
-import { Expose } from 'class-transformer';
 
 @Entity('ranking')
 @Index(['summonerId', 'queueType', 'region'], { unique: true })
@@ -89,17 +88,22 @@ export class Ranking extends Auditable {
   @ApiProperty({ description: 'Summoner assists.' })
   assists: number;
 
-  @Column()
+  @Column({ type: 'decimal', nullable: true })
   @IsDefined()
   @ApiProperty({ description: 'Kills/Deaths/Assists ratio' })
   kda: number;
 
-  @Column({ name: 'avg_vision_score' })
+  @Column({ type: 'decimal', name: 'win_rate', nullable: true })
+  @IsOptional()
+  @ApiProperty({ description: 'Win Rate' })
+  winRate: number;
+
+  @Column({ type: 'decimal', name: 'avg_vision_score' })
   @IsDefined()
   @ApiProperty({ description: 'Summoner average Vision Score.' })
   avgVisionScore: number;
 
-  @Column({ name: 'avg_cs_per_minute' })
+  @Column({ type: 'decimal', name: 'avg_cs_per_minute' })
   @IsDefined()
   @ApiProperty({ description: 'Summoner average Creep Score Per Minute.' })
   avgCSPerMinute: number;

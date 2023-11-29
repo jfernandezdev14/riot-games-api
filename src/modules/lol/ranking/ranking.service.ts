@@ -3,7 +3,6 @@ import { DeleteResult } from 'typeorm';
 import { RankingDao } from './ranking.dao';
 import { Ranking } from '../../../entities/Ranking.entity';
 import { PageResponse } from '../../../constants/PageResponse';
-import { MatchSummary } from '../../../entities/MatchSummary.entity';
 
 @Injectable()
 export class RankingService {
@@ -58,12 +57,30 @@ export class RankingService {
     }
     return this.rankingDao.saveRanking({
       ...ranking,
-      id: ranking.id,
+      id: existingRanking.id,
     });
   }
 
   async getRankingById(rakingId: string): Promise<Ranking> {
     return this.rankingDao.getRankingById(rakingId);
+  }
+
+  async getRankingPosition(
+    summonerId: string,
+    attribute: string,
+  ): Promise<any> {
+    let rankingPositions = await this.rankingDao.getRankingPosition(
+      summonerId,
+      attribute,
+    );
+    let rakingPosition = {};
+    for (let rankingPos of rankingPositions) {
+      if (rankingPos.summoner_id == summonerId) {
+        rakingPosition = rankingPos;
+        break;
+      }
+    }
+    return rakingPosition;
   }
 
   async deleteRanking(

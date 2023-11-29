@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Brackets, DeleteResult, Repository } from 'typeorm';
+import {
+  Brackets,
+  DeleteResult,
+  ObjectLiteral,
+  Repository,
+  SelectQueryBuilder,
+} from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Ranking } from '../../../entities/Ranking.entity';
 import { PageResponse } from '../../../constants/PageResponse';
@@ -24,6 +30,18 @@ export class RankingDao {
       .createQueryBuilder('ranking')
       .where('ranking.id = :id', { id })
       .getOne();
+  }
+
+  async getRankingPosition(
+    summonerId: string,
+    attribute: string,
+  ): Promise<any> {
+    return await this.repository
+      .createQueryBuilder('ranking')
+      .select(`ROW_NUMBER () OVER (ORDER BY "${attribute}" DESC)`, 'position')
+      .addSelect(`ranking.${attribute}`, `${attribute}`)
+      .addSelect('ranking.summoner_id', 'summoner_id')
+      .getRawMany();
   }
 
   async getRankingByUniqueId(
