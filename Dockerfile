@@ -1,6 +1,6 @@
 # Installing dependencies with migrations:
 
-FROM --platform=linux/amd64 node:19.5.0-alpine AS install-dependencies
+FROM node:19.5.0-alpine AS install-dependencies
 
 WORKDIR /user/src/app
 
@@ -13,7 +13,7 @@ COPY . .
 
 # Creating a build:
 
-FROM --platform=linux/amd64 node:19.5.0-alpine AS create-build
+FROM node:19.5.0-alpine AS create-build
 
 WORKDIR /user/src/app
 
@@ -26,7 +26,7 @@ USER node
 
 # Running the application:
 
-FROM --platform=linux/amd64 node:19.5.0-alpine AS run
+FROM node:19.5.0-alpine AS run
 
 WORKDIR /user/src/app
 

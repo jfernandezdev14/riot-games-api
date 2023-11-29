@@ -29,7 +29,7 @@ services:
       context: .
       # noinspection ComposeUnknownKeys
       target: install-dependencies
-    command: npm run start:inspect
+    command: npm run start:dev
     volumes:
       - ./src:/user/src/app/src
     env_file:

@@ -20,9 +20,11 @@ import { join } from 'path';
         autoLoadEntities: true,
         migrations: [join(__dirname, './../db/migrations/{.ts,*.js}')],
         entities: [join(__dirname, './../**/*.entity.js')],
-        ssl: {
-          rejectUnauthorized: false,
-        },
+        ...(configService.get('DB_SSL') && {
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        }),
         cli: {
           migrationsDir: 'db/migrations',
         },
