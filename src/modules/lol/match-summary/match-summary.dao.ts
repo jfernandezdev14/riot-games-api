@@ -37,21 +37,20 @@ export class MatchSummaryDao {
       .getOne();
   }
 
-  async getPlayerSummaryByPlayerId(playerId: string): Promise<any[]> {
-    return this.repository
+  async getPlayerSummaryByPlayerIdAndQueue(
+    playerId: string,
+    queueId: string,
+  ): Promise<any> {
+    return await this.repository
       .createQueryBuilder('match_summary')
-      .select([
-        'match_summary.player_id as playerId',
-        'match_summary.queue_id as queueId',
-        'SUM( ALL match_summary.kills) as kills',
-        'SUM( ALL match_summary.assists) as assists',
-        'SUM( ALL match_summary.deaths) as deaths',
-        'AVG( ALL match_summary.cs_per_minute) as Avg_cs_per_minute',
-        'AVG( ALL match_summary.vision_score) as avgVisionScore',
-      ])
       .where('match_summary.player_id = :playerId', { playerId })
-      .groupBy('match_summary.player_id, match_summary.queue_id')
-      .getMany();
+      .andWhere('match_summary.queue_id = :queueId', { queueId })
+      .select('SUM(match_summary.kills)', 'kills')
+      .addSelect('SUM(match_summary.assists)', 'assists')
+      .addSelect('SUM(match_summary.deaths)', 'deaths')
+      .addSelect('AVG(match_summary.cs_per_minute)', 'avgCSPerMinute')
+      .addSelect('AVG(match_summary.vision_score)', 'avgVisionScore')
+      .getRawOne();
   }
 
   async find(

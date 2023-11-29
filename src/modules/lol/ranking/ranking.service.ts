@@ -3,7 +3,6 @@ import { DeleteResult } from 'typeorm';
 import { RankingDao } from './ranking.dao';
 import { Ranking } from '../../../entities/Ranking.entity';
 import { PageResponse } from '../../../constants/PageResponse';
-import { MatchSummary } from '../../../entities/MatchSummary.entity';
 
 @Injectable()
 export class RankingService {
@@ -58,7 +57,7 @@ export class RankingService {
     }
     return this.rankingDao.saveRanking({
       ...ranking,
-      id: ranking.id,
+      id: existingRanking.id,
     });
   }
 

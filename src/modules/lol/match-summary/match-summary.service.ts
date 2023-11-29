@@ -47,8 +47,11 @@ export class MatchSummaryService {
     return this.matchSummaryDao.getMatchSummaryById(matchSummaryId);
   }
 
-  async getPlayerSummaryByPlayerId(matchSummaryId: string): Promise<any[]> {
-    return this.matchSummaryDao.getPlayerSummaryByPlayerId(matchSummaryId);
+  async getPlayerSummaryByPlayerIdAndQueue(playerId: string, queueId: string) {
+    return this.matchSummaryDao.getPlayerSummaryByPlayerIdAndQueue(
+      playerId,
+      queueId,
+    );
   }
 
   async deleteMatchSummary(
