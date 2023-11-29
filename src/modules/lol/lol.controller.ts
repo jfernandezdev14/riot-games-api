@@ -23,7 +23,7 @@ import { Ranking } from '../../entities/Ranking.entity';
 export class LolController {
   constructor(private readonly lolService: LolService) {}
 
-  @Get('/region/:region/summoner/:summonerName/matches')
+  @Get('/regions/:region/summoners/:summonerName/matches')
   @ApiOperation({
     summary: 'Get Summoner recent matches by its name and region',
   })
@@ -75,46 +75,7 @@ export class LolController {
     );
   }
 
-  @Get('/region/:region/summoner/:summonerName/matches')
-  @ApiOperation({
-    summary: 'Get Summoner recent matches by its name and region',
-  })
-  @ApiParam({
-    name: 'region',
-    required: true,
-    type: String,
-    enum: RegionAliasType,
-  })
-  @ApiParam({
-    name: 'summonerName',
-    required: true,
-    type: String,
-  })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'pageSize', required: false, type: Number })
-  @ApiQuery({
-    name: 'queueName',
-    required: false,
-    type: String,
-    enum: QueueNamesType,
-    enumName: 'Queue Name Filter',
-  })
-  async getSummary(
-    @Param('region', new ParseEnumPipe(RegionAliasType))
-    region: RegionAliasType,
-    @Param('summonerName') summonerName: string,
-    @Query(
-      'queueName',
-      new DefaultValuePipe(QueueNamesType.ALL),
-      new ParseEnumPipe(QueueNamesType),
-    )
-    queueName?: QueueNamesType,
-  ): Promise<PageResponse<MatchSummaryDto>> {
-    let queueId = QueueIDType[queueName];
-    return await this.lolService.getMatches(summonerName, region, queueId);
-  }
-
-  @Get('/region/:region/summoner/:summonerName/summary')
+  @Get('/regions/:region/summoners/:summonerName/summary')
   @ApiOperation({
     summary: 'Get Summoner matches summary',
   })
@@ -155,7 +116,7 @@ export class LolController {
     );
   }
 
-  @Get('/leaderboard/:summonerName/:region')
+  @Get('regions/:region/summoners/:summonerName/leaderboard')
   @ApiOperation({
     summary: 'Get leaderboard ranking positions',
   })
