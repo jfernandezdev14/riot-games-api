@@ -16,6 +16,7 @@ import {
   DEFAULT_PAGE_NO,
   DEFAULT_PAGE_SIZE,
 } from '../../constants/DefaultPageParams';
+import { Ranking } from '../../entities/Ranking.entity';
 
 @Controller('/lol')
 @ApiTags('LeagueOfLegends')
@@ -135,7 +136,7 @@ export class LolController {
       new ParseEnumPipe(QueueNamesType),
     )
     queueName?: QueueNamesType,
-  ): Promise<PageResponse<MatchSummaryDto>> {
+  ): Promise<Ranking[]> {
     let queueId = QueueIDType[queueName];
     return await this.lolService.getPlayerSummary(
       summonerName,
